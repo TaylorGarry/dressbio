@@ -7,7 +7,7 @@ import productRoutes from "./Routes/product.routes.js";
 const app = express();
 
 const allowedOrigins = [
-  "http://localhost:3000",
+  "http://localhost:5173",
   "https://yourfrontend.com"
 ];
 
