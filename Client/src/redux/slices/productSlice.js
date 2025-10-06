@@ -9,8 +9,7 @@ export const fetchProducts = createAsyncThunk(
     const res = await axios.get(
       `${API}?page=${page}&limit=${limit}&search=${search}&sort=${sort}`
     );
-    console.log("Res of product::::", res.data);
-    return res.data; // contains { products, page, totalPages, ... }
+    return res.data;
   }
 );
 
@@ -26,30 +25,63 @@ export const addProduct = createAsyncThunk(
   "products/add",
   async (productData, { getState }) => {
     const token = getState().auth.token;
-    const res = await axios.post(API, productData, {
+    const formData = new FormData();
+    Object.keys(productData).forEach((key) => {
+      if (key === "images" && Array.isArray(productData.images)) {
+        productData.images.forEach((file) => formData.append("images", file));
+      } else {
+        formData.append(key, productData[key]);
+      }
+    });
+    const res = await axios.post(API, formData, {
       headers: {
-        "Content-Type": "application/json",
+        "Content-Type": "multipart/form-data",
         Authorization: `Bearer ${token}`,
       },
     });
-    return res.data;
+    return res.data.product;
   }
 );
-
 export const updateProduct = createAsyncThunk(
   "products/update",
-  async ({ id, updatedData }, { getState }) => {
-    const token = getState().auth.token;
-    const res = await axios.put(`${API}/${id}`, updatedData, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return res.data;
+  async ({ id, updatedData }, { getState, rejectWithValue }) => {
+    try {
+      const token = getState().auth.token;
+      const formData = new FormData();
+
+      for (const key in updatedData) {
+        const value = updatedData[key];
+        if (
+          value !== undefined &&
+          value !== null &&
+          value !== "" &&
+          value !== "undefined"
+        ) {
+          if (key === "images" && Array.isArray(value)) {
+            value.forEach((file) => {
+              formData.append("images", file);
+            });
+          } else {
+            formData.append(key, value);
+          }
+        }
+      }
+
+      const res = await axios.put(`${API}/${id}`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      return res.data.updatedProduct;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to update product"
+      );
+    }
   }
 );
-
 export const deleteProduct = createAsyncThunk(
   "products/delete",
   async (id, { getState }) => {
@@ -82,27 +114,21 @@ const productSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // FETCH PRODUCTS
       .addCase(fetchProducts.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.loading = false;
-
         const { products = [], page = 1, totalPages = 1 } = action.payload;
-
         if (page === 1) {
-          // First page -> reset
           state.list = products;
         } else {
-          // Subsequent pages -> append unique
           const newProducts = products.filter(
             (p) => !state.list.some((existing) => existing._id === p._id)
           );
           state.list = [...state.list, ...newProducts];
         }
-
         state.page = page;
         state.totalPages = totalPages;
         state.hasMore = page < totalPages;
@@ -111,20 +137,26 @@ const productSlice = createSlice({
         state.loading = false;
         state.error = action.error.message;
       })
-
-      // FETCH ONE PRODUCT
       .addCase(fetchProductById.fulfilled, (state, action) => {
         state.loading = false;
         state.selected = action.payload;
       })
-
-      // ADD PRODUCT
+      .addCase(addProduct.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(addProduct.fulfilled, (state, action) => {
+        state.loading = false;
         state.list.unshift(action.payload);
       })
-
-      // UPDATE PRODUCT
+      .addCase(addProduct.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      })
+      .addCase(updateProduct.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(updateProduct.fulfilled, (state, action) => {
+        state.loading = false;
         const index = state.list.findIndex(
           (p) => p._id === action.payload._id
         );
@@ -132,10 +164,20 @@ const productSlice = createSlice({
           state.list[index] = action.payload;
         }
       })
-
-      // DELETE PRODUCT
+      .addCase(updateProduct.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      })
+      .addCase(deleteProduct.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(deleteProduct.fulfilled, (state, action) => {
+        state.loading = false;
         state.list = state.list.filter((p) => p._id !== action.payload);
+      })
+      .addCase(deleteProduct.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
       });
   },
 });

@@ -2,7 +2,7 @@ import React from 'react'
 
 const Page3 = () => {
   return (
-    <div>Page3</div>
+    <h1>Order Page is in Progress...</h1>
   )
 }
 

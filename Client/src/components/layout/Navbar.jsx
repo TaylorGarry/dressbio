@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { logout, updateProfile } from "../../redux/slices/authSlice";
 import { useNavigate } from "react-router-dom";
@@ -9,7 +9,7 @@ const Navbar = () => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
-  const { user, token } = useSelector((state) => state.auth);
+  const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -38,21 +38,30 @@ const Navbar = () => {
     });
   };
 
-  const handleProfileSubmit = async (data) => {
-    try {
-      const formData = new FormData();
-      formData.append("username", data.username);
-      if (data.password) formData.append("password", data.password);
-      if (data.image && data.image[0]) formData.append("image", data.image[0]);
+ const handleProfileSubmit = async (data) => {
+  try {
+    const formData = new FormData();
+    formData.append("username", data.username);
+    if (data.password) formData.append("password", data.password);
+    if (data.image && data.image[0]) formData.append("image", data.image[0]);
 
-      await dispatch(updateProfile({ formData, token })).unwrap();
+    // Dispatch Redux async thunk
+    const result = await dispatch(updateProfile(formData)).unwrap();
 
-      toast.success("Profile updated successfully");
-      setIsProfileModalOpen(false);
-    } catch (err) {
-      toast.error(err || "Failed to update profile");
-    }
-  };
+    toast.success("Profile updated successfully");
+
+    // Update form defaults
+    reset({
+      username: result.username,
+      password: "",
+      image: null,
+    });
+    setIsProfileModalOpen(false);
+  } catch (err) {
+    toast.error(err || "Failed to update profile");
+  }
+};
+
 
   return (
     <div className="bg-white shadow p-4 flex justify-between items-center">
@@ -131,24 +140,6 @@ const Navbar = () => {
                   className="w-20 h-20 object-cover rounded mt-2"
                 />
               )}
-
-              {user?.image ? (
-  <img
-    src={user.image}
-    alt="profile"
-    className="w-10 h-10 rounded-full cursor-pointer"
-    onClick={() => setShowProfileMenu(!showProfileMenu)}
-  />
-) : (
-  <div
-    className="w-10 h-10 bg-gray-300 rounded-full cursor-pointer flex items-center justify-center text-white"
-    onClick={() => setShowProfileMenu(!showProfileMenu)}
-  >
-    {user?.username?.[0]?.toUpperCase() || "U"}
-  </div>
-)}
-
-
 
               <div className="flex justify-end gap-2 mt-2">
                 <button

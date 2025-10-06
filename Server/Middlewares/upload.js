@@ -22,10 +22,10 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 },  
   fileFilter: (req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
-    if ([".jpg", ".jpeg", ".png", ".webp"].includes(ext)) {
+    if ([".jpg", ".jpeg", ".png", ".webp", ".gif", ".bmp" , ".jfif"].includes(ext)) {
       cb(null, true);
     } else {
-      cb(new Error("Only images (jpg, jpeg, png, webp) are allowed"), false);
+      cb(new Error("Only images (jpg, jpeg, png, webp, jfif, .gif, .bmp) are allowed"), false);
     }
   },
 });

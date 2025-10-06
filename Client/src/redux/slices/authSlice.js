@@ -49,11 +49,8 @@ export const updateProfile = createAsyncThunk(
   async (formData, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const { data } = await API.put("/profile", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
+      const { data } = await API.put("/update-profile", formData, {
+        headers: { Authorization: `Bearer ${token}` },
       });
       return data.user;
     } catch (err) {
@@ -61,6 +58,7 @@ export const updateProfile = createAsyncThunk(
     }
   }
 );
+
 
 const authSlice = createSlice({
   name: "auth",

@@ -14,31 +14,46 @@ const productSchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
+      index: true,
     },
-    image: {
-      type: String,  
-      required: true,
-    },
+    images: [
+      {
+        type: String,
+        required: true,
+      },
+    ],
     price: {
       type: Number,
       required: true,
+      index: true,
     },
     available: {
       type: Boolean,
       default: true,
+      index: true,
     },
     deliverAt: {
-      type: Date,  
+      type: Date,
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",  
+      ref: "User",
       required: true,
     },
   },
   { timestamps: true }
 );
 
-const Product = mongoose.model("Product", productSchema);
+productSchema.index({
+  name: "text",
+  description: "text",
+  category: "text",
+});
 
+productSchema.index(
+  { name: "text", category: "text", description: "text" },
+  { weights: { name: 5, category: 3, description: 1 } }
+);
+
+const Product = mongoose.model("Product", productSchema);
 export default Product;
