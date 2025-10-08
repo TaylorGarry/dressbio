@@ -82,7 +82,6 @@ const MyOrders = () => {
                   </span>
                 </div>
 
-                {/* Products */}
                 <div className="divide-y">
                   {order.products.map((item, i) => (
                     <div
@@ -114,7 +113,6 @@ const MyOrders = () => {
                   ))}
                 </div>
 
-                {/* Summary */}
                 <div className="mt-4 border-t pt-3 text-sm text-gray-700">
                   <p>
                     <span className="font-medium">Payment Method:</span>{" "}
@@ -135,7 +133,6 @@ const MyOrders = () => {
                   </p>
                 </div>
 
-                {/* Cancel Button */}
                 {order.status === "pending" && (
                   <div className="mt-4 text-right">
                     <button
