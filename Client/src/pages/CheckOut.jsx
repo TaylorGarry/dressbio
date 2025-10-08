@@ -1,15 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom"; // 🟢 Added useLocation
 import { placeOrder } from "../redux/slices/orderSlice";
-// import { placeOrder } from "../../redux/slices/orderSlice";
 
 const Checkout = () => {
-  const { items } = useSelector((state) => state.cart);
+  const location = useLocation(); // 🟢
+  const { items: cartItems } = useSelector((state) => state.cart);
   const { loading } = useSelector((state) => state.orders);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  const [checkoutItems, setCheckoutItems] = useState([]); // 🟢 new state
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -20,7 +21,20 @@ const Checkout = () => {
     paymentMethod: "cod",
   });
 
-  const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  // 🟢 Detect if product came via Buy Now or from Cart
+  useEffect(() => {
+    if (location.state?.product) {
+      setCheckoutItems([{ ...location.state.product, quantity: 1 }]);
+    } else {
+      setCheckoutItems(cartItems);
+    }
+  }, [location.state, cartItems]);
+
+  // 🟢 Calculate prices dynamically
+  const subtotal = checkoutItems.reduce(
+    (acc, item) => acc + item.price * (item.quantity || 1),
+    0
+  );
   const shipping = subtotal > 1000 ? 0 : 50;
   const total = subtotal + shipping;
 
@@ -37,6 +51,7 @@ const Checkout = () => {
       return;
     }
 
+    // 🟢 Use checkoutItems instead of cartItems
     const orderData = {
       shippingInfo: {
         fullName: formData.fullName,
@@ -46,10 +61,10 @@ const Checkout = () => {
         city: formData.city,
         postalCode: formData.postalCode,
       },
-      orderItems: items.map((item) => ({
+      orderItems: checkoutItems.map((item) => ({
         product: item._id,
         name: item.name,
-        quantity: item.quantity,
+        quantity: item.quantity || 1,
         price: item.price,
       })),
       paymentMethod: formData.paymentMethod,
@@ -68,7 +83,8 @@ const Checkout = () => {
     }
   };
 
-  if (items.length === 0) {
+  // 🟢 Handle empty state correctly
+  if (checkoutItems.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-[80vh]">
         <img
@@ -90,10 +106,13 @@ const Checkout = () => {
   return (
     <div className="min-h-screen bg-gray-100 py-10 mt-16">
       <div className="max-w-6xl mx-auto bg-white rounded-xl shadow-md p-6 md:p-10">
-        <h2 className="text-2xl font-semibold mb-6 text-gray-800 text-center">Your Shopping List</h2>
+        <h2 className="text-2xl font-semibold mb-6 text-gray-800 text-center">
+          Your Shopping List
+        </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           <form onSubmit={handlePlaceOrder} className="space-y-4">
+            {/* Shipping Form */}
             <div>
               <label className="block text-sm font-medium mb-1">Full Name *</label>
               <input
@@ -188,14 +207,15 @@ const Checkout = () => {
             </button>
           </form>
 
+          {/* 🟢 Right side summary */}
           <div className="bg-gray-50 p-6 rounded-lg border">
             <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
-            {items.map((item) => (
+            {checkoutItems.map((item) => (
               <div key={item._id} className="flex justify-between mb-3">
                 <p className="text-gray-700">
-                  {item.name} × {item.quantity}
+                  {item.name} × {item.quantity || 1}
                 </p>
-                <p className="font-semibold">₹{item.price * item.quantity}</p>
+                <p className="font-semibold">₹{item.price * (item.quantity || 1)}</p>
               </div>
             ))}
             <hr className="my-3" />

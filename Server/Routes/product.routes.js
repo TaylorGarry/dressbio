@@ -1,15 +1,17 @@
 import express from "express";
 import {
+  addProductDetails,
   createProduct,
   deleteProduct,
   getAllProducts,
   getProductById,
+  getProductDetails,
   searchProducts,
   updateProduct,
 } from "../Controllers/product.controller.js";
 import { adminMiddleware } from "../Middlewares/admin.middleware.js";
 import upload from "../Middlewares/upload.js";  
-import { authMiddleware } from "../middlewares/auth.middleware.js";
+import { authMiddleware } from "../Middlewares/auth.middleware.js"
 
 const router = express.Router();
 
@@ -34,5 +36,14 @@ router.put(
 );
 
 router.delete("/products/:id", authMiddleware, adminMiddleware, deleteProduct);
+router.put(
+  "/products/:id/details",
+  authMiddleware,
+  adminMiddleware,
+  upload.array("extraImages", 10),
+  addProductDetails
+);
+
+router.get("/products/:id/details", getProductDetails);
 
 export default router;

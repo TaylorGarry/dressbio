@@ -13,6 +13,7 @@ import NoDataFound from "./pages/NoDataFound";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/CheckOut.jsx";
 import MyOrders from "./pages/MyOrder.jsx";
+import ProductDetail from "./components/page/ProductDetail.jsx";
 
 const App = () => {
   const { user } = useSelector((state) => state.auth);
@@ -36,12 +37,13 @@ const App = () => {
         <Route index element={<Navigate to="add-product" />} />
         <Route path="add-product" element={<AddProduct />} />
         <Route path="product" element={<Page2 />} />
-        <Route path="page3" element={<Page3 />} />
+        <Route path="orders" element={<Page3 />} />
         <Route path="page4" element={<Page4 />} />
       </Route>
       <Route path="/cart" element={<Cart />} />
       <Route path="/checkout" element={<Checkout />} />
       <Route path="/my-orders" element={<MyOrders />} />
+      <Route path="/product/:id" element={<ProductDetail />} />
       <Route path="*" element={<Navigate to="/products" />} />
     </Routes>
   );

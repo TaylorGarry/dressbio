@@ -4,7 +4,7 @@ import { NavLink } from "react-router-dom";
 const menuItems = [
   { name: "Add Product", path: "/admin/add-product" },
   { name: "All Products", path: "/admin/product" },
-  { name: "Orders", path: "/admin/page3" },
+  { name: "Orders", path: "/admin/orders" },
   { name: "Status", path: "/admin/page4" },
 ];
 

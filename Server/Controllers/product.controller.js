@@ -220,4 +220,79 @@ export const searchProducts = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+export const addProductDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { specifications, returnPolicy, returnDays, expectedDelivery, reviews } = req.body;
+
+    const product = await Product.findById(id);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    let extraImages = [];
+    if (req.files && req.files.length > 0) {
+      const uploaded = await Promise.all(
+        req.files.map((file) => uploadOnCloudinary(file.path, "product_details"))
+      );
+      extraImages = uploaded.filter(Boolean);
+    }
+
+    if (specifications) product.specifications = specifications;
+    if (returnPolicy) product.returnPolicy = returnPolicy;
+
+    if (returnDays) {
+      const parsedDays = parseInt(returnDays, 10);
+      if (!isNaN(parsedDays)) product.returnDays = parsedDays;
+    }
+
+    if (expectedDelivery) {
+      const parts = expectedDelivery.split("-");
+      if (parts.length === 3) {
+        const formattedDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+        if (!isNaN(formattedDate)) product.expectedDelivery = formattedDate;
+      }
+    }
+
+    if (extraImages.length > 0) {
+      product.images = [...(product.images || []), ...extraImages];
+    }
+
+    if (reviews && Array.isArray(reviews)) {
+      const newReviews = await Review.insertMany(
+        reviews.map((r) => ({
+          product: id,
+          username: r.username,
+          rating: Math.min(Math.max(Number(r.rating) || 0, 1), 5),
+          comment: r.comment,
+        }))
+      );
+      product.reviews.push(...newReviews.map((rev) => rev._id));
+    }
+
+    await product.save();
+
+    const updatedProduct = await Product.findById(id).populate("reviews");
+
+    res.status(200).json({
+      message: "Product details updated successfully",
+      product: updatedProduct,
+    });
+  } catch (error) {
+    console.error("Add Product Details Error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+export const getProductDetails = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id).select(
+      "name images price specifications returnPolicy expectedDelivery"
+    );
+    if (!product)
+      return res.status(404).json({ message: "Product not found" });
+
+    res.status(200).json(product);
+  } catch (error) {
+    console.error("Get Product Details Error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
 

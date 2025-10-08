@@ -40,6 +40,27 @@ const productSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    specifications: {
+      type: String,
+      default: "",
+    },
+    returnPolicy: {
+      type: String,
+      default: "",
+    },
+    returnDays: {
+      type: Number,
+      default: 7,
+    },
+    expectedDelivery: {
+      type: Date,
+    },
+    reviews: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Review",
+      },
+    ],
   },
   { timestamps: true }
 );

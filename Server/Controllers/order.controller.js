@@ -62,7 +62,7 @@ export const getMyOrders = async (req, res) => {
     if (cached) return res.json(cached);
 
     const orders = await Order.find({ user: req.user.id })
-      .populate("products.product", "name price")
+      .populate("products.product", "name price images")
       .sort({ createdAt: -1 })
       .lean();
 
@@ -74,18 +74,41 @@ export const getMyOrders = async (req, res) => {
 };
 export const getAllOrders = async (req, res) => {
   try {
-    const cacheKey = "orders_all";
+    const { page = 1, limit = 10, status, paymentMethod, sort = "desc" } = req.query;
+
+    const filter = {};
+    if (status) filter.status = status;
+    if (paymentMethod) filter.paymentMethod = paymentMethod;
+
+    const cacheKey = `orders_all_${status || "all"}_${paymentMethod || "all"}_${page}_${limit}_${sort}`;
     const cached = orderCache.get(cacheKey);
     if (cached) return res.json(cached);
 
-    const orders = await Order.find()
-      .populate("user", "username accountType")
-      .populate("products.product", "name price")
-      .sort({ createdAt: -1 })
-      .lean();
+    const skip = (Number(page) - 1) * Number(limit);
+    const sortOption = { createdAt: sort === "asc" ? 1 : -1 };
 
-    orderCache.set(cacheKey, orders);
-    res.json(orders);
+    const [orders, total] = await Promise.all([
+      Order.find(filter)
+        .populate("user", "username accountType")
+        .populate("products.product", "name price")
+        .sort(sortOption)
+        .skip(skip)
+        .limit(Number(limit))
+        .lean(),
+
+      Order.countDocuments(filter),
+    ]);
+
+    const response = {
+      total,
+      page: Number(page),
+      totalPages: Math.ceil(total / limit),
+      limit: Number(limit),
+      orders,
+    };
+
+    orderCache.set(cacheKey, response);
+    res.json(response);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }
@@ -106,6 +129,38 @@ export const updateOrderStatus = async (req, res) => {
     orderCache.del("orders_all");
 
     res.json({ message: "Order status updated", order });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+export const cancelOrder = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;  
+
+    const order = await Order.findById(id);
+
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    if (order.user.toString() !== userId.toString()) {
+      return res.status(403).json({ message: "Not authorized to cancel this order" });
+    }
+
+    if (order.status !== "Pending" && order.status !== "Processing") {
+      return res
+        .status(400)
+        .json({ message: `Cannot cancel order in '${order.status}' status` });
+    }
+
+    order.status = "Cancelled";
+    await order.save();
+
+    orderCache.del(`orders_user_${userId}`);
+    orderCache.del("orders_all");
+
+    res.json({ message: "Order cancelled successfully", order });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

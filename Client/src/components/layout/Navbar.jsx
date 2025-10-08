@@ -8,19 +8,12 @@ import toast from "react-hot-toast";
 const Navbar = () => {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
   const { register, handleSubmit, watch, reset } = useForm({
-    defaultValues: {
-      username: user?.username || "",
-      password: "",
-      image: null,
-    },
+    defaultValues: { username: user?.username || "", password: "", image: null },
   });
-
   const watchImage = watch("image");
 
   const handleLogout = () => {
@@ -31,46 +24,26 @@ const Navbar = () => {
   const handleProfileOpen = () => {
     setIsProfileModalOpen(true);
     setShowProfileMenu(false);
-    reset({
-      username: user.username,
-      password: "",
-      image: null,
-    });
+    reset({ username: user.username, password: "", image: null });
   };
 
- const handleProfileSubmit = async (data) => {
-  try {
-    const formData = new FormData();
-    formData.append("username", data.username);
-    if (data.password) formData.append("password", data.password);
-    if (data.image && data.image[0]) formData.append("image", data.image[0]);
-
-    // Dispatch Redux async thunk
-    const result = await dispatch(updateProfile(formData)).unwrap();
-
-    toast.success("Profile updated successfully");
-
-    // Update form defaults
-    reset({
-      username: result.username,
-      password: "",
-      image: null,
-    });
-    setIsProfileModalOpen(false);
-  } catch (err) {
-    toast.error(err || "Failed to update profile");
-  }
-};
-
+  const handleProfileSubmit = async (data) => {
+    try {
+      const formData = new FormData();
+      formData.append("username", data.username);
+      if (data.password) formData.append("password", data.password);
+      if (data.image && data.image[0]) formData.append("image", data.image[0]);
+      const result = await dispatch(updateProfile(formData)).unwrap();
+      toast.success("Profile updated successfully");
+      reset({ username: result.username, password: "", image: null });
+      setIsProfileModalOpen(false);
+    } catch (err) {
+      toast.error(err || "Failed to update profile");
+    }
+  };
 
   return (
-    <div className="bg-white shadow p-4 flex justify-between items-center">
-      <input
-        type="text"
-        placeholder="Search..."
-        className="border p-2 rounded w-1/3 max-w-xs"
-      />
-
+    <div className="bg-white shadow p-4 flex justify-end items-center">
       <div className="relative">
         {user?.image ? (
           <img
@@ -115,11 +88,7 @@ const Navbar = () => {
               className="flex flex-col gap-3"
               encType="multipart/form-data"
             >
-              <input
-                {...register("username")}
-                placeholder="Username"
-                className="border p-2 rounded"
-              />
+              <input {...register("username")} className="border p-2 rounded" />
               <input
                 {...register("password")}
                 type="password"
