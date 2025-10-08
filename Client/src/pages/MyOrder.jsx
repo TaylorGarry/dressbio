@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchMyOrders } from "../redux/slices/orderSlice";
 import NavbarPublic from "../components/layout/NavbarPublic";
-// import { toast } from "react-toastify";
 
 const MyOrders = () => {
   const dispatch = useDispatch();
