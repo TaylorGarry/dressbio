@@ -1,22 +1,26 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchProducts } from "../redux/slices/productSlice";
+import { addToCart, removeFromCart } from "../redux/slices/cartSlice";
 import { Loader2, Heart, ChevronLeft, ChevronRight } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import NavbarPublic from "../components/layout/NavbarPublic";
 
 const Product = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { list, loading, page, hasMore, totalPages } = useSelector(
     (state) => state.products
   );
   const { token } = useSelector((state) => state.auth);
+  const { items: cartItems } = useSelector((state) => state.cart);
   const location = useLocation();
+
   const searchResults = location.state?.searchResults || [];
   const productList = searchResults.length > 0 ? searchResults : list;
 
-  const [likedProducts, setLikedProducts] = useState([]);
   const [currentImageIndex, setCurrentImageIndex] = useState({});
+  const [animatingHearts, setAnimatingHearts] = useState({});
 
   useEffect(() => {
     if (list.length === 0) {
@@ -32,16 +36,20 @@ const Product = () => {
 
   const handleBuy = (product) => {
     if (!token) return alert("Please login to buy!");
+    navigate("/checkout", { state: { product } });
     console.log("Buy product:", product);
   };
 
-  const toggleLike = (productId) => {
+  const toggleLike = (product) => {
     if (!token) return alert("Please login to like products!");
-    setLikedProducts((prev) =>
-      prev.includes(productId)
-        ? prev.filter((id) => id !== productId)
-        : [...prev, productId]
-    );
+    const isInCart = cartItems.some((item) => item._id === product._id);
+    if (isInCart) dispatch(removeFromCart(product._id));
+    else dispatch(addToCart(product));
+
+    setAnimatingHearts((prev) => ({ ...prev, [product._id]: true }));
+    setTimeout(() => {
+      setAnimatingHearts((prev) => ({ ...prev, [product._id]: false }));
+    }, 400);
   };
 
   const nextImage = (productId, total) => {
@@ -76,6 +84,18 @@ const Product = () => {
 
   return (
     <>
+      <style>
+        {`
+          @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.4); }
+            100% { transform: scale(1); }
+          }
+          .pop {
+            animation: pop 0.4s ease;
+          }
+        `}
+      </style>
       <NavbarPublic />
       <div className="min-h-screen bg-gray-100 mt-16 py-10 px-5">
         <div className="max-w-7xl mx-auto">
@@ -86,23 +106,30 @@ const Product = () => {
           ) : productList.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-[70vh] text-center">
               <img
-                src="https://cdni.iconscout.com/illustration/premium/thumb/no-data-found-illustration-download-in-svg-png-gif-file-formats--document-page-results-empty-state-pack-user-interface-illustrations-4978946.png"
+                src="/images/no-data.png"
                 alt="No data found"
                 className="w-60 h-60 object-contain mb-6"
               />
-              <h2 className="text-2xl font-semibold text-gray-700">No Products Found</h2>
-              <p className="text-gray-500 mt-2">Try searching for another dress or designer</p>
+              <h2 className="text-2xl font-semibold text-gray-700">
+                No Products Found
+              </h2>
+              <p className="text-gray-500 mt-2">
+                Try searching for another dress or designer
+              </p>
             </div>
           ) : (
             <>
               <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
                 {productList.map((product) => {
-                  const isLiked = likedProducts.includes(product._id);
                   const images =
                     Array.isArray(product.images) && product.images.length > 0
                       ? product.images
                       : ["https://via.placeholder.com/300x300?text=No+Image"];
                   const index = currentImageIndex[product._id] || 0;
+                  const isInCart = cartItems.some(
+                    (item) => item._id === product._id
+                  );
+                  const animate = animatingHearts[product._id];
 
                   return (
                     <div
@@ -138,13 +165,15 @@ const Product = () => {
                       </div>
 
                       <button
-                        onClick={() => toggleLike(product._id)}
-                        className="absolute top-3 right-3 p-1 rounded-full transition cursor-pointer"
+                        onClick={() => toggleLike(product)}
+                        className={`absolute top-3 right-3 p-1 rounded-full transition cursor-pointer ${
+                          animate ? "pop" : ""
+                        }`}
                       >
                         <Heart
                           className="w-5 h-5"
-                          fill={isLiked ? "red" : "none"}
-                          stroke={isLiked ? "red" : "currentColor"}
+                          fill={isInCart ? "red" : "none"}
+                          stroke={isInCart ? "red" : "currentColor"}
                         />
                       </button>
 

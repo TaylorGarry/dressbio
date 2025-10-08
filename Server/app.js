@@ -3,6 +3,7 @@ import cors from "cors";
 import authRoutes from "./Routes/auth.routes.js";
 import userRoutes from "./Routes/user.routes.js";
 import productRoutes from "./Routes/product.routes.js";
+import orderRoutes from "./Routes/order.routes.js";
 
 const app = express();
 
@@ -34,6 +35,7 @@ app.get("/", (req, res) => {
 app.use("/api/v1", authRoutes);
 app.use("/api/v1", userRoutes);
 app.use("/api/v1", productRoutes);
+app.use("/api/v1", orderRoutes);
 
 app.use((err, req, res, next) => {
   if (err.message === "CORS_NOT_ALLOWED") {

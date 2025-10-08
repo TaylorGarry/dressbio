@@ -10,6 +10,8 @@ import Page3 from "./components/page/Page3";
 import Page4 from "./components/page/Page4";
 import Products from "./pages/Product";
 import NoDataFound from "./pages/NoDataFound";
+import Cart from "./pages/Cart";
+import Checkout from "./pages/CheckOut.jsx";
 
 const App = () => {
   const { user } = useSelector((state) => state.auth);
@@ -36,6 +38,8 @@ const App = () => {
         <Route path="page3" element={<Page3 />} />
         <Route path="page4" element={<Page4 />} />
       </Route>
+      <Route path="/cart" element={<Cart />} />
+      <Route path="/checkout" element={<Checkout />} />
       <Route path="*" element={<Navigate to="/products" />} />
     </Routes>
   );

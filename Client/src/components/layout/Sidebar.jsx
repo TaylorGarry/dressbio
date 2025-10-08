@@ -15,7 +15,7 @@ const Sidebar = ({ isOpen, toggleSidebar }) => {
         isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
       }`}
     >
-      <h2 className="text-xl font-bold mb-6">Menu</h2>
+      <h2 className="text-xl font-bold mb-6">DressBio</h2>
       <ul>
         {menuItems.map((item) => (
           <li key={item.path} className="mb-2">

@@ -12,6 +12,7 @@ const NavbarPublic = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const { user } = useSelector((state) => state.auth);
+  const cartItems = useSelector((state) => state.cart.items);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -85,12 +86,20 @@ const NavbarPublic = () => {
       <div className="hidden md:flex items-center gap-4">
         {user ? (
           <>
-            <button
-              onClick={() => navigate("/cart")}
-              className="p-2 hover:bg-gray-100 rounded-full cursor-pointer"
-            >
-              <ShoppingCart size={22} />
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => navigate("/cart")}
+                className="p-2 hover:bg-gray-100 rounded-full cursor-pointer relative"
+              >
+                <ShoppingCart size={22} />
+                {cartItems.length > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
+                    {cartItems.length}
+                  </span>
+                )}
+              </button>
+            </div>
+
             <div className="relative">
               {user.image ? (
                 <img
@@ -108,7 +117,7 @@ const NavbarPublic = () => {
                 </div>
               )}
               {showMenu && (
-                <div className="absolute right-0 mt-2 w-40 bg-white border rounded shadow z-50 ">
+                <div className="absolute right-0 mt-2 w-40 bg-white border rounded shadow z-50">
                   <button
                     onClick={handleProfileOpen}
                     className="block w-full text-left px-4 py-2 hover:bg-gray-100"
@@ -143,98 +152,6 @@ const NavbarPublic = () => {
           {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
-
-      {mobileMenuOpen && (
-        <div className="absolute top-14 left-0 w-full bg-white border-t shadow-md flex flex-col items-center gap-4 py-4 md:hidden">
-          <input
-            type="text"
-            placeholder="Search Your designers dress..."
-            className="border border-[#EAEAEA] p-2 rounded-full w-11/12 focus:outline-none"
-          />
-          {user ? (
-            <>
-              <button
-                onClick={() => navigate("/cart")}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded w-11/12 justify-center cursor-pointer"
-              >
-                <ShoppingCart size={20} /> Cart
-              </button>
-              <button
-                onClick={handleProfileOpen}
-                className="w-11/12 px-4 py-2 bg-gray-100 rounded cursor-pointer"
-              >
-                My Profile
-              </button>
-              <button
-                onClick={handleLogout}
-                className="w-11/12 px-4 py-2 bg-red-600 text-white rounded cursor-pointer"
-              >
-                Logout
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={handleAuthClick}
-              className="w-11/12 px-4 py-2 bg-blue-600 text-white rounded"
-            >
-              {location.pathname === "/login" ? "Sign Up" : "Sign In"}
-            </button>
-          )}
-        </div>
-      )}
-
-      {isProfileModalOpen && (
-        <div className="fixed inset-0 bg-gray-200 bg-opacity-40 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded shadow-lg w-11/12 max-w-md">
-            <h2 className="text-xl font-bold mb-4 text-center">Update Profile</h2>
-            <form
-              onSubmit={handleSubmit(handleProfileSubmit)}
-              className="flex flex-col gap-3"
-              encType="multipart/form-data"
-            >
-              <input
-                {...register("username")}
-                placeholder="Username"
-                className="border p-2 rounded"
-              />
-              <input
-                {...register("password")}
-                type="password"
-                placeholder="Password"
-                className="border p-2 rounded"
-              />
-              <input
-                {...register("image")}
-                type="file"
-                accept="image/*"
-                className="border p-2 rounded"
-              />
-              {watchImage && watchImage[0] && (
-                <img
-                  src={URL.createObjectURL(watchImage[0])}
-                  alt="Preview"
-                  className="w-20 h-20 object-cover rounded mt-2 self-center"
-                />
-              )}
-              <div className="flex justify-end gap-2 mt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsProfileModalOpen(false)}
-                  className="px-4 py-2 border rounded hover:bg-gray-100"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                >
-                  Save
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </nav>
   );
 };
