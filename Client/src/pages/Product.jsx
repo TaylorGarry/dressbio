@@ -18,6 +18,7 @@ const Product = () => {
 
   const searchResults = location.state?.searchResults || [];
   const productList = searchResults.length > 0 ? searchResults : list;
+  console.log("Product List:", productList);
 
   const [currentImageIndex, setCurrentImageIndex] = useState({});
   const [animatingHearts, setAnimatingHearts] = useState({});

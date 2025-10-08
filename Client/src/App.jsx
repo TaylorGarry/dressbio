@@ -12,6 +12,7 @@ import Products from "./pages/Product";
 import NoDataFound from "./pages/NoDataFound";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/CheckOut.jsx";
+import MyOrders from "./pages/MyOrder.jsx";
 
 const App = () => {
   const { user } = useSelector((state) => state.auth);
@@ -40,6 +41,7 @@ const App = () => {
       </Route>
       <Route path="/cart" element={<Cart />} />
       <Route path="/checkout" element={<Checkout />} />
+      <Route path="/my-orders" element={<MyOrders />} />
       <Route path="*" element={<Navigate to="/products" />} />
     </Routes>
   );

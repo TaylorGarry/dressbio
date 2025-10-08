@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { logout, updateProfile } from "../../redux/slices/authSlice";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast";
-import { ShoppingCart, Menu, X } from "lucide-react";
+import { ShoppingCart, Menu, X, Package, User } from "lucide-react";
 
 const NavbarPublic = () => {
   const [showMenu, setShowMenu] = useState(false);
@@ -42,25 +42,6 @@ const NavbarPublic = () => {
     });
   };
 
-  const handleProfileSubmit = async (data) => {
-    try {
-      const formData = new FormData();
-      formData.append("username", data.username);
-      if (data.password) formData.append("password", data.password);
-      if (data.image && data.image[0]) formData.append("image", data.image[0]);
-      const result = await dispatch(updateProfile(formData)).unwrap();
-      toast.success("Profile updated successfully");
-      reset({
-        username: result.username,
-        password: "",
-        image: null,
-      });
-      setIsProfileModalOpen(false);
-    } catch (err) {
-      toast.error(err || "Failed to update profile");
-    }
-  };
-
   const handleAuthClick = () => {
     if (location.pathname === "/login") navigate("/signup");
     else navigate("/login");
@@ -68,6 +49,7 @@ const NavbarPublic = () => {
 
   return (
     <nav className="bg-white shadow-md p-3 md:p-4 flex items-center justify-between w-full fixed top-0 left-0 z-50">
+      {/* Logo */}
       <div
         onClick={() => navigate("/products")}
         className="text-xl md:text-2xl font-bold cursor-pointer select-none"
@@ -75,6 +57,7 @@ const NavbarPublic = () => {
         DressBio
       </div>
 
+      {/* Search Bar (Desktop Only) */}
       <div className="hidden md:flex items-center justify-center flex-1">
         <input
           type="text"
@@ -83,9 +66,11 @@ const NavbarPublic = () => {
         />
       </div>
 
+      {/* Desktop Buttons */}
       <div className="hidden md:flex items-center gap-4">
         {user ? (
           <>
+            {/* Cart */}
             <div className="relative">
               <button
                 onClick={() => navigate("/cart")}
@@ -100,6 +85,18 @@ const NavbarPublic = () => {
               </button>
             </div>
 
+            {/* My Orders */}
+            <div className="relative">
+              <button
+                onClick={() => navigate("/my-orders")}
+                className="p-2 hover:bg-gray-100 rounded-full cursor-pointer flex items-center gap-1"
+              >
+                <Package size={22} />
+                <span className="hidden lg:inline text-sm">My Orders</span>
+              </button>
+            </div>
+
+            {/* Profile */}
             <div className="relative">
               {user.image ? (
                 <img
@@ -144,6 +141,7 @@ const NavbarPublic = () => {
         )}
       </div>
 
+      {/* Mobile Menu Button */}
       <div className="md:hidden flex items-center">
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -152,6 +150,51 @@ const NavbarPublic = () => {
           {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
+
+      {/* Mobile Menu Dropdown */}
+      {mobileMenuOpen && (
+        <div className="absolute top-14 left-0 w-full bg-white shadow-md p-4 flex flex-col gap-4 z-40 md:hidden">
+          {user ? (
+            <>
+              <button
+                onClick={() => navigate("/cart")}
+                className="flex items-center gap-2 text-gray-700 hover:text-blue-600"
+              >
+                <ShoppingCart size={20} />
+                Cart ({cartItems.length})
+              </button>
+              <button
+                onClick={() => navigate("/my-orders")}
+                className="flex items-center gap-2 text-gray-700 hover:text-blue-600"
+              >
+                <Package size={20} />
+                My Orders
+              </button>
+              <button
+                onClick={handleProfileOpen}
+                className="flex items-center gap-2 text-gray-700 hover:text-blue-600"
+              >
+                <User size={20} />
+                My Profile
+              </button>
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-2 text-red-600 hover:text-red-700"
+              >
+                <X size={20} />
+                Logout
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={handleAuthClick}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              {location.pathname === "/login" ? "Sign Up" : "Sign In"}
+            </button>
+          )}
+        </div>
+      )}
     </nav>
   );
 };
