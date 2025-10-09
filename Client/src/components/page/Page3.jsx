@@ -17,9 +17,7 @@ const Page3 = () => {
   const itemsPerPage = 5;
 
   useEffect(() => {
-    if (!orders || orders.length === 0) {
-      dispatch(fetchAllOrders());
-    }
+    dispatch(fetchAllOrders());
   }, [dispatch]);
 
   const handleStatusChange = async (orderId, newStatus) => {
@@ -27,23 +25,27 @@ const Page3 = () => {
       setUpdating(orderId);
       await dispatch(updateOrderStatus({ orderId, status: newStatus })).unwrap();
       toast.success(`Order status updated to ${newStatus}`);
-      dispatch(fetchAllOrders());
     } catch (err) {
       toast.error(err || "Failed to update status");
     } finally {
       setUpdating(null);
+      // Refresh list in background
+      setTimeout(() => dispatch(fetchAllOrders()), 500);
     }
   };
 
   const handleCancelOrder = async (orderId) => {
     try {
       if (window.confirm("Are you sure you want to cancel this order?")) {
+        setUpdating(orderId);
         await dispatch(cancelOrder(orderId)).unwrap();
         toast.success("Order cancelled successfully");
-        dispatch(fetchAllOrders());
       }
     } catch (err) {
       toast.error(err || "Failed to cancel order");
+    } finally {
+      setUpdating(null);
+      setTimeout(() => dispatch(fetchAllOrders()), 500);
     }
   };
 

@@ -9,7 +9,6 @@ export const placeOrder = createAsyncThunk(
         getState().auth?.user?.token ||
         getState().auth?.token ||
         localStorage.getItem("token");
-
       const api = withToken(token);
       const { data } = await api.post("/orders", orderData);
       return data.order;
@@ -27,7 +26,6 @@ export const fetchMyOrders = createAsyncThunk(
         getState().auth?.user?.token ||
         getState().auth?.token ||
         localStorage.getItem("token");
-
       const api = withToken(token);
       const { data } = await api.get("/orders/my");
       return data;
@@ -46,9 +44,7 @@ export const fetchAllOrders = createAsyncThunk(
         getState().auth?.user?.token ||
         getState().auth?.token ||
         localStorage.getItem("token");
-
       const api = withToken(token);
-
       const query = new URLSearchParams({
         page,
         limit,
@@ -56,7 +52,6 @@ export const fetchAllOrders = createAsyncThunk(
         ...(status ? { status } : {}),
         ...(paymentMethod ? { paymentMethod } : {}),
       });
-
       const { data } = await api.get(`/orders?${query.toString()}`);
       return data;
     } catch (err) {
@@ -73,10 +68,9 @@ export const cancelOrder = createAsyncThunk(
         getState().auth?.user?.token ||
         getState().auth?.token ||
         localStorage.getItem("token");
-
       const api = withToken(token);
       const { data } = await api.put(`/orders/${orderId}/cancel`);
-      return data.order;
+      return data.order; // returns the updated order with status "Cancelled"
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Failed to cancel order");
     }
@@ -91,7 +85,6 @@ export const updateOrderStatus = createAsyncThunk(
         getState().auth?.user?.token ||
         getState().auth?.token ||
         localStorage.getItem("token");
-
       const api = withToken(token);
       const { data } = await api.put(`/orders/${orderId}/status`, { status });
       return data.order;
@@ -122,6 +115,13 @@ const orderSlice = createSlice({
     },
     setFilters: (state, action) => {
       state.filters = { ...state.filters, ...action.payload };
+    },
+    updateOrderLocally: (state, action) => {
+      const { orderId, status } = action.payload;
+      const index = state.list.findIndex((order) => order._id === orderId);
+      if (index !== -1) {
+        state.list[index].status = status;
+      }
     },
   },
   extraReducers: (builder) => {
@@ -168,7 +168,7 @@ const orderSlice = createSlice({
       })
       .addCase(cancelOrder.fulfilled, (state, action) => {
         state.list = state.list.map((order) =>
-          order._id === action.payload._id ? action.payload : order
+          order._id === action.payload._id ? { ...order, status: "Cancelled" } : order
         );
       })
       .addCase(updateOrderStatus.fulfilled, (state, action) => {
@@ -179,5 +179,5 @@ const orderSlice = createSlice({
   },
 });
 
-export const { clearOrders, setFilters } = orderSlice.actions;
+export const { clearOrders, setFilters, updateOrderLocally } = orderSlice.actions;
 export default orderSlice.reducer;

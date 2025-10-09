@@ -348,16 +348,22 @@ const Product = () => {
                   );
                   const animate = animatingHearts[product._id];
 
+                  const discountPercent = 30;
+                  const originalPrice = product.price;
+                  const discountAmount = (originalPrice * discountPercent) / 100;
+                  const discountedPrice = originalPrice - discountAmount;
+
                   return (
                     <div
                       key={product._id}
-                      className="relative bg-white rounded-2xl shadow hover:shadow-lg transition p-4 flex flex-col items-center text-center"
+                      className="bg-white rounded-xl shadow-sm hover:shadow-lg transition relative overflow-hidden group border border-gray-200"
                     >
-                      <div className="relative w-40 h-40 mb-3 overflow-hidden rounded-md">
+                      <div className="relative">
                         <img
                           src={images[index]}
                           alt={product.name}
-                          className="w-40 h-40 object-cover rounded-md transition-transform duration-700 ease-in-out"
+                          className="w-full h-56 object-contain p-4 transition-transform duration-300 group-hover:scale-105"
+                          onClick={() => handleViewDetails(product._id)}
                         />
                         {images.length > 1 && (
                           <>
@@ -365,7 +371,7 @@ const Product = () => {
                               onClick={() =>
                                 prevImage(product._id, images.length)
                               }
-                              className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-white/70 p-1 rounded-full hover:bg-white cursor-pointer"
+                              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 p-1 rounded-full hover:bg-white"
                             >
                               <ChevronLeft className="w-4 h-4" />
                             </button>
@@ -373,50 +379,76 @@ const Product = () => {
                               onClick={() =>
                                 nextImage(product._id, images.length)
                               }
-                              className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-white/70 p-1 rounded-full hover:bg-white cursor-pointer"
+                              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 p-1 rounded-full hover:bg-white"
                             >
                               <ChevronRight className="w-4 h-4" />
                             </button>
                           </>
                         )}
+
+                        <button
+                          onClick={() => toggleLike(product)}
+                          className={`absolute top-3 right-3 bg-white/90 p-1.5 rounded-full hover:bg-white shadow ${
+                            animate ? "pop" : ""
+                          }`}
+                        >
+                          <Heart
+                            className="w-5 h-5"
+                            fill={isInCart ? "red" : "none"}
+                            stroke={isInCart ? "red" : "gray"}
+                          />
+                        </button>
                       </div>
 
-                      <button
-                        onClick={() => toggleLike(product)}
-                        className={`absolute top-3 right-3 p-1 rounded-full transition cursor-pointer ${
-                          animate ? "pop" : ""
-                        }`}
-                      >
-                        <Heart
-                          className="w-5 h-5"
-                          fill={isInCart ? "red" : "none"}
-                          stroke={isInCart ? "red" : "currentColor"}
-                        />
-                      </button>
+                      <div className="px-4 pb-4 text-left">
+                        <h2
+                          onClick={() => handleViewDetails(product._id)}
+                          className="text-sm font-semibold text-gray-800 mt-1 cursor-pointer hover:text-blue-600 line-clamp-1"
+                        >
+                          {product.name}
+                        </h2>
 
-                      <h2 className="text-lg font-semibold text-gray-800">
-                        {product.name}
-                      </h2>
-                      <p className="text-sm text-gray-600 line-clamp-2">
-                        {product.description || "No description available"}
-                      </p>
-                      <p className="text-blue-600 font-bold mt-2">
-                        ₹{product.price || "N/A"}
-                      </p>
+                        <p className="text-gray-500 text-xs mt-1 line-clamp-2">
+                          {product.description || "No description available"}
+                        </p>
 
-                      <button
-                        onClick={() => handleBuy(product)}
-                        className="bg-blue-600 text-white w-full py-2 rounded-lg hover:bg-blue-700 transition mt-4"
-                      >
-                        Buy Now
-                      </button>
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="bg-green-600 text-white text-xs px-2 py-0.5 rounded flex items-center">
+                            4.2★
+                          </span>
+                        </div>
 
-                      <button
-                        onClick={() => handleViewDetails(product._id)}
-                        className="border border-blue-600 text-blue-600 w-full py-2 rounded-lg hover:bg-blue-50 transition mt-2"
-                      >
-                        View Details
-                      </button>
+                        <div className="flex items-baseline gap-2 mt-2">
+                          <span className="text-lg font-semibold text-gray-800">
+                            ₹{Math.round(discountedPrice)}
+                          </span>
+                          <span className="text-gray-400 line-through text-sm">
+                            ₹{Math.round(originalPrice)}
+                          </span>
+                          <span className="text-green-600 text-sm font-medium">
+                            {discountPercent}% off
+                          </span>
+                        </div>
+
+                        <p className="text-xs text-green-700 mt-1">
+                          Buy 2 items, save extra ₹40
+                        </p>
+
+                        <div className="flex gap-2 mt-3">
+                          <button
+                            onClick={() => handleBuy(product)}
+                            className="flex-1 bg-blue-600 text-white text-sm py-2 rounded-lg hover:bg-blue-700 transition"
+                          >
+                            Buy Now
+                          </button>
+                          <button
+                            onClick={() => handleViewDetails(product._id)}
+                            className="flex-1 border border-blue-600 text-blue-600 text-sm py-2 rounded-lg hover:bg-blue-50 transition"
+                          >
+                            View
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   );
                 })}
@@ -445,3 +477,4 @@ const Product = () => {
 };
 
 export default Product;
+

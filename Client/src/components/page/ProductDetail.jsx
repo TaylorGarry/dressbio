@@ -1,15 +1,23 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import Slider from "react-slick";
 import { Loader2, Star } from "lucide-react";
 import { fetchProductById, fetchProductReviews } from "../../redux/slices/productSlice.js";
+import { placeOrder, cancelOrder } from "../../redux/slices/orderSlice.js";
 import NavbarPublic from "../layout/NavbarPublic.jsx";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { selected, loading } = useSelector((state) => state.products);
+  const { user } = useSelector((state) => state.auth);
+  const { list: orders } = useSelector((state) => state.orders);
+
+  // Find the current order related to the product
+  const currentOrder = orders.find(order => order.products.some(product => product.product._id === id));
+  const currentStatus = currentOrder ? currentOrder.status : "";
 
   useEffect(() => {
     dispatch(fetchProductById(id)).then(() => {
@@ -48,6 +56,35 @@ const ProductDetail = () => {
         ).toFixed(1)
       : 0;
 
+  const handleBuyNow = async () => {
+    if (!user) {
+      return navigate("/login");
+    }
+    const orderData = {
+      userId: user.id,
+      products: [{ productId: selected._id, quantity: 1 }],
+    };
+    try {
+      const response = await dispatch(placeOrder(orderData)).unwrap();
+      if (response) {
+        navigate("/checkout", { state: { product: selected } });
+      }
+    } catch (error) {
+      console.error("Order placement failed", error);
+    }
+  };
+
+  const handleCancelOrder = async () => {
+    if (currentOrder) {
+      try {
+        await dispatch(cancelOrder(currentOrder._id)).unwrap();
+        navigate("/orders"); // Redirect to orders page after cancellation
+      } catch (error) {
+        console.error("Failed to cancel the order", error);
+      }
+    }
+  };
+
   return (
     <>
       <NavbarPublic />
@@ -77,11 +114,9 @@ const ProductDetail = () => {
                 <Star
                   key={i}
                   size={18}
-                  className={
-                    i < Math.round(avgRating)
-                      ? "text-yellow-500 fill-yellow-500"
-                      : "text-gray-300"
-                  }
+                  className={i < Math.round(avgRating)
+                    ? "text-yellow-500 fill-yellow-500"
+                    : "text-gray-300"}
                 />
               ))}
               <span className="text-gray-600 text-sm ml-1">
@@ -133,12 +168,20 @@ const ProductDetail = () => {
             )}
 
             <div className="mt-8 flex gap-4">
-              <button className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition">
-                Add to Cart
-              </button>
-              <button className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition">
+              <button
+                className="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition"
+                onClick={handleBuyNow}  
+              >
                 Buy Now
               </button>
+              {currentStatus !== "Delivered" && currentStatus && (
+                <button
+                  className="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition"
+                  onClick={handleCancelOrder}
+                >
+                  Cancel Order
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -161,11 +204,9 @@ const ProductDetail = () => {
                         <Star
                           key={idx}
                           size={16}
-                          className={
-                            idx < review.rating
-                              ? "text-yellow-500 fill-yellow-500"
-                              : "text-gray-300"
-                          }
+                          className={idx < review.rating
+                            ? "text-yellow-500 fill-yellow-500"
+                            : "text-gray-300"}
                         />
                       ))}
                     </div>

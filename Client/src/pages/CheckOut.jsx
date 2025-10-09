@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { useNavigate, useLocation } from "react-router-dom"; // 🟢 Added useLocation
+import { useNavigate, useLocation } from "react-router-dom";  
 import { placeOrder } from "../redux/slices/orderSlice";
 
 const Checkout = () => {
-  const location = useLocation(); // 🟢
+  const location = useLocation();  
   const { items: cartItems } = useSelector((state) => state.cart);
   const { loading } = useSelector((state) => state.orders);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [checkoutItems, setCheckoutItems] = useState([]); // 🟢 new state
+  const [checkoutItems, setCheckoutItems] = useState([]);  
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -21,7 +21,6 @@ const Checkout = () => {
     paymentMethod: "cod",
   });
 
-  // 🟢 Detect if product came via Buy Now or from Cart
   useEffect(() => {
     if (location.state?.product) {
       setCheckoutItems([{ ...location.state.product, quantity: 1 }]);
@@ -30,7 +29,6 @@ const Checkout = () => {
     }
   }, [location.state, cartItems]);
 
-  // 🟢 Calculate prices dynamically
   const subtotal = checkoutItems.reduce(
     (acc, item) => acc + item.price * (item.quantity || 1),
     0
@@ -51,7 +49,6 @@ const Checkout = () => {
       return;
     }
 
-    // 🟢 Use checkoutItems instead of cartItems
     const orderData = {
       shippingInfo: {
         fullName: formData.fullName,
@@ -83,7 +80,6 @@ const Checkout = () => {
     }
   };
 
-  // 🟢 Handle empty state correctly
   if (checkoutItems.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-[80vh]">
@@ -112,7 +108,6 @@ const Checkout = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           <form onSubmit={handlePlaceOrder} className="space-y-4">
-            {/* Shipping Form */}
             <div>
               <label className="block text-sm font-medium mb-1">Full Name *</label>
               <input
@@ -207,7 +202,6 @@ const Checkout = () => {
             </button>
           </form>
 
-          {/* 🟢 Right side summary */}
           <div className="bg-gray-50 p-6 rounded-lg border">
             <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
             {checkoutItems.map((item) => (
