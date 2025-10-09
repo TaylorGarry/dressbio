@@ -5,6 +5,7 @@ import userRoutes from "./Routes/user.routes.js";
 import productRoutes from "./Routes/product.routes.js";
 import orderRoutes from "./Routes/order.routes.js";
 import reviewRoutes from "./Routes/review.routes.js"
+import paymentRoutes from "./Routes/payment.routes.js"
 const app = express();
 
 const allowedOrigins = [
@@ -37,6 +38,7 @@ app.use("/api/v1", userRoutes);
 app.use("/api/v1", productRoutes);
 app.use("/api/v1", orderRoutes);
 app.use("/api/v1", reviewRoutes);
+app.use("/api/v1/payment", paymentRoutes);
 app.use((err, req, res, next) => {
   if (err.message === "CORS_NOT_ALLOWED") {
     return res.status(403).json({ message: "CORS not allowed for this origin" });

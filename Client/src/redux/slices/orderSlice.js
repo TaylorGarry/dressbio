@@ -18,6 +18,25 @@ export const placeOrder = createAsyncThunk(
   }
 );
 
+export const createPaymentIntent = createAsyncThunk(
+  "orders/createPaymentIntent",
+  async ({ amount, orderId }, { getState, rejectWithValue }) => {
+    try {
+      const token =
+        getState().auth?.user?.token ||
+        getState().auth?.token ||
+        localStorage.getItem("token");
+      const api = withToken(token); // attaches Authorization header
+      const { data } = await api.post("/payment/create-intent", { amount, orderId, currency: "inr" });
+      return data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Failed to create payment");
+    }
+  }
+);
+
+
+
 export const fetchMyOrders = createAsyncThunk(
   "orders/fetchMyOrders",
   async (_, { getState, rejectWithValue }) => {
@@ -39,23 +58,37 @@ export const fetchAllOrders = createAsyncThunk(
   "orders/fetchAllOrders",
   async (params = {}, { getState, rejectWithValue }) => {
     try {
-      const { page = 1, limit = 10, status, paymentMethod, sort = "desc" } = params;
+      const {
+        page = 1,
+        limit = 10,
+        status,
+        paymentMethod,
+        sort = "desc",
+        search, // added search param
+      } = params;
+
       const token =
         getState().auth?.user?.token ||
         getState().auth?.token ||
         localStorage.getItem("token");
+
       const api = withToken(token);
+
       const query = new URLSearchParams({
         page,
         limit,
         sort,
         ...(status ? { status } : {}),
         ...(paymentMethod ? { paymentMethod } : {}),
+        ...(search ? { search } : {}), // append search if present
       });
+
       const { data } = await api.get(`/orders?${query.toString()}`);
       return data;
     } catch (err) {
-      return rejectWithValue(err.response?.data?.message || "Failed to fetch all orders");
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to fetch all orders"
+      );
     }
   }
 );
@@ -70,7 +103,7 @@ export const cancelOrder = createAsyncThunk(
         localStorage.getItem("token");
       const api = withToken(token);
       const { data } = await api.put(`/orders/${orderId}/cancel`);
-      return data.order; // returns the updated order with status "Cancelled"
+      return data.order;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Failed to cancel order");
     }
@@ -105,6 +138,8 @@ const orderSlice = createSlice({
     filters: { status: "", paymentMethod: "", sort: "desc" },
     loading: false,
     error: null,
+    clientSecret: null,
+    paymentIntentId: null,
   },
   reducers: {
     clearOrders: (state) => {
@@ -119,9 +154,7 @@ const orderSlice = createSlice({
     updateOrderLocally: (state, action) => {
       const { orderId, status } = action.payload;
       const index = state.list.findIndex((order) => order._id === orderId);
-      if (index !== -1) {
-        state.list[index].status = status;
-      }
+      if (index !== -1) state.list[index].status = status;
     },
   },
   extraReducers: (builder) => {
@@ -135,6 +168,19 @@ const orderSlice = createSlice({
         state.list.push(action.payload);
       })
       .addCase(placeOrder.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(createPaymentIntent.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(createPaymentIntent.fulfilled, (state, action) => {
+        state.loading = false;
+        state.clientSecret = action.payload.clientSecret;
+        state.paymentIntentId = action.payload.paymentIntentId || null;
+      })
+      .addCase(createPaymentIntent.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

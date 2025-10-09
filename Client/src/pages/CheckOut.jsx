@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { useNavigate, useLocation } from "react-router-dom";  
-import { placeOrder } from "../redux/slices/orderSlice";
+import { useNavigate, useLocation } from "react-router-dom";
+import { placeOrder, createPaymentIntent } from "../redux/slices/orderSlice";
 
 const Checkout = () => {
-  const location = useLocation();  
+  const location = useLocation();
   const { items: cartItems } = useSelector((state) => state.cart);
   const { loading } = useSelector((state) => state.orders);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const [checkoutItems, setCheckoutItems] = useState([]);  
+  const [checkoutItems, setCheckoutItems] = useState([]);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -70,13 +70,44 @@ const Checkout = () => {
       totalPrice: total,
     };
 
-    const result = await dispatch(placeOrder(orderData));
+    if (formData.paymentMethod === "cod") {
+      const result = await dispatch(placeOrder(orderData));
+      if (result.meta.requestStatus === "fulfilled") {
+        alert("Order placed successfully!");
+        navigate("/my-orders");
+      } else {
+        alert("Failed to place order. Try again!");
+      }
+    } else if (formData.paymentMethod === "stripe") {
+      const orderResult = await dispatch(placeOrder(orderData));
+      if (orderResult.meta.requestStatus !== "fulfilled") {
+        alert("Failed to create order. Try again!");
+        return;
+      }
 
-    if (result.meta.requestStatus === "fulfilled") {
-      alert("Order placed successfully!");
-      navigate("/my-orders");
-    } else {
-      alert("Failed to place order. Try again!");
+      const createdOrder = orderResult.payload;
+      const token = localStorage.getItem("token");
+
+     const paymentResult = await dispatch(
+  createPaymentIntent({ 
+    amount: total, 
+    orderId: createdOrder._id  // make sure you send _id here
+  })
+);
+
+
+     if (paymentResult.meta.requestStatus === "fulfilled") {
+  navigate("/payment", {
+  state: {
+    amount: total,          // pass amount
+    orderData: createdOrder // pass order details
+  },
+});
+
+}
+ else {
+        alert("Failed to initialize payment.");
+      }
     }
   };
 
@@ -184,12 +215,7 @@ const Checkout = () => {
                 className="border rounded-lg w-full p-2 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
               >
                 <option value="cod">Cash on Delivery</option>
-                <option value="razorpay" disabled>
-                  Razorpay (Coming Soon)
-                </option>
-                <option value="stripe" disabled>
-                  Stripe (Coming Soon)
-                </option>
+                <option value="stripe">Stripe (Online Payment)</option>
               </select>
             </div>
 
@@ -198,7 +224,7 @@ const Checkout = () => {
               disabled={loading}
               className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mt-4 cursor-pointer disabled:opacity-60"
             >
-              {loading ? "Placing Order..." : "Place Order"}
+              {loading ? "Processing..." : "Proceed to Pay"}
             </button>
           </form>
 

@@ -14,6 +14,9 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/CheckOut.jsx";
 import MyOrders from "./pages/MyOrder.jsx";
 import ProductDetail from "./components/page/ProductDetail.jsx";
+import PaymentPage from "./pages/PaymentPage.jsx";
+import PaymentSuccess from "./pages/PaymentSuccess.jsx";
+import PaymentFailed from "./pages/PaymentFailed.jsx";
 
 const App = () => {
   const { user } = useSelector((state) => state.auth);
@@ -44,6 +47,9 @@ const App = () => {
       <Route path="/checkout" element={<Checkout />} />
       <Route path="/my-orders" element={<MyOrders />} />
       <Route path="/product/:id" element={<ProductDetail />} />
+        <Route path="/payment" element={<PaymentPage />} />
+        <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/payment-failed" element={<PaymentFailed />} />
       <Route path="*" element={<Navigate to="/products" />} />
     </Routes>
   );

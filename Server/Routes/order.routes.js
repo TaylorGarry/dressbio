@@ -7,7 +7,8 @@ import {
   cancelOrder,
 } from "../Controllers/order.controller.js";
 import { adminMiddleware } from "../Middlewares/admin.middleware.js";
-import { authMiddleware } from "../Middlewares/auth.middleware.js";
+import { authMiddleware } from "../middlewares/auth.middleware.js";
+// import { authMiddleware } from "../Middlewares/auth.middleware.js";
 
 const router = express.Router();
 
