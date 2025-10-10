@@ -235,11 +235,12 @@ import { addToCart, removeFromCart } from "../redux/slices/cartSlice";
 import { Loader2, Heart, ChevronLeft, ChevronRight } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import NavbarPublic from "../components/layout/NavbarPublic";
+import HeroBanner from "../components/layout/HeroBanner";
 
 const Product = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { list, loading, page, hasMore, totalPages } = useSelector(
+  const { list, loading, page, hasMore } = useSelector(
     (state) => state.products
   );
   const { token } = useSelector((state) => state.auth);
@@ -250,12 +251,19 @@ const Product = () => {
 
   const [currentImageIndex, setCurrentImageIndex] = useState({});
   const [animatingHearts, setAnimatingHearts] = useState({});
+  const [scrollY, setScrollY] = useState(0);
 
   useEffect(() => {
     if (list.length === 0) {
       dispatch(fetchProducts({ page: 1 }));
     }
   }, [dispatch]);
+
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const handleLoadMore = () => {
     if (hasMore && !loading) dispatch(fetchProducts({ page: page + 1 }));
@@ -314,19 +322,44 @@ const Product = () => {
   return (
     <>
       <NavbarPublic />
-      <div className="min-h-screen bg-gray-100 mt-16 py-10 px-5">
-        <div className="max-w-7xl mx-auto">
+      <HeroBanner />
+      <div className="relative min-h-screen bg-gray-50 py-12 px-5 overflow-hidden">
+        <div
+          className="absolute -top-32 -left-32 w-96 h-96 bg-gradient-to-tr from-blue-100 to-blue-200 rounded-full opacity-30 blur-3xl pointer-events-none"
+          style={{ transform: `translateY(${scrollY * 0.2}px)` }}
+        ></div>
+        <div
+          className="absolute -bottom-32 -right-24 w-80 h-80 bg-gradient-to-tr from-pink-100 to-pink-200 rounded-full opacity-30 blur-3xl pointer-events-none"
+          style={{ transform: `translateY(${scrollY * -0.15}px)` }}
+        ></div>
+
+        <div className="relative max-w-7xl mx-auto z-10">
           {loading && productList.length === 0 ? (
             <div className="flex justify-center items-center h-64">
-              <Loader2 className="w-10 h-10 animate-spin text-gray-500" />
+              <Loader2 className="w-10 h-10 animate-spin text-gray-400" />
             </div>
           ) : productList.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-[70vh] text-center">
-              <img
-                src="/images/no-data.png"
-                alt="No data found"
-                className="w-60 h-60 object-contain mb-6"
-              />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-40 h-40 text-gray-300 mb-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M3 3h18v18H3V3z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M3 3l18 18"
+                />
+              </svg>
               <h2 className="text-2xl font-semibold text-gray-700">
                 No Products Found
               </h2>
@@ -341,7 +374,7 @@ const Product = () => {
                   const images =
                     Array.isArray(product.images) && product.images.length > 0
                       ? product.images
-                      : ["https://via.placeholder.com/300x300?text=No+Image"];
+                      : [];
                   const index = currentImageIndex[product._id] || 0;
                   const isInCart = cartItems.some(
                     (item) => item._id === product._id
@@ -356,39 +389,40 @@ const Product = () => {
                   return (
                     <div
                       key={product._id}
-                      className="bg-white rounded-xl shadow-sm hover:shadow-lg transition relative overflow-hidden group border border-gray-200"
+                      className="bg-white rounded-2xl shadow-md hover:shadow-xl transition overflow-hidden group border border-gray-200 relative"
                     >
                       <div className="relative">
                         <img
                           src={images[index]}
                           alt={product.name}
-                          className="w-full h-56 object-contain p-4 transition-transform duration-300 group-hover:scale-105"
+                          className="w-full h-64 object-cover transition-transform duration-300 group-hover:scale-105 cursor-pointer"
                           onClick={() => handleViewDetails(product._id)}
                         />
+
                         {images.length > 1 && (
                           <>
                             <button
                               onClick={() =>
                                 prevImage(product._id, images.length)
                               }
-                              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 p-1 rounded-full hover:bg-white"
+                              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full hover:bg-white shadow"
                             >
-                              <ChevronLeft className="w-4 h-4" />
+                              <ChevronLeft className="w-5 h-5" />
                             </button>
                             <button
                               onClick={() =>
                                 nextImage(product._id, images.length)
                               }
-                              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 p-1 rounded-full hover:bg-white"
+                              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full hover:bg-white shadow"
                             >
-                              <ChevronRight className="w-4 h-4" />
+                              <ChevronRight className="w-5 h-5" />
                             </button>
                           </>
                         )}
 
                         <button
                           onClick={() => toggleLike(product)}
-                          className={`absolute top-3 right-3 bg-white/90 p-1.5 rounded-full hover:bg-white shadow ${
+                          className={`absolute top-3 right-3 bg-white/90 p-2 rounded-full shadow hover:bg-white transition ${
                             animate ? "pop" : ""
                           }`}
                         >
@@ -400,10 +434,10 @@ const Product = () => {
                         </button>
                       </div>
 
-                      <div className="px-4 pb-4 text-left">
+                      <div className="px-4 pb-4 pt-3 text-left">
                         <h2
                           onClick={() => handleViewDetails(product._id)}
-                          className="text-sm font-semibold text-gray-800 mt-1 cursor-pointer hover:text-blue-600 line-clamp-1"
+                          className="text-sm font-semibold text-gray-900 mt-1 cursor-pointer hover:text-blue-600 line-clamp-1"
                         >
                           {product.name}
                         </h2>
@@ -419,7 +453,7 @@ const Product = () => {
                         </div>
 
                         <div className="flex items-baseline gap-2 mt-2">
-                          <span className="text-lg font-semibold text-gray-800">
+                          <span className="text-lg font-semibold text-gray-900">
                             ₹{Math.round(discountedPrice)}
                           </span>
                           <span className="text-gray-400 line-through text-sm">
@@ -437,7 +471,7 @@ const Product = () => {
                         <div className="flex gap-2 mt-3">
                           <button
                             onClick={() => handleBuy(product)}
-                            className="flex-1 bg-blue-600 text-white text-sm py-2 rounded-lg hover:bg-blue-700 transition"
+                            className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm py-2 rounded-lg shadow hover:from-blue-700 hover:to-indigo-700 transition transform hover:-translate-y-0.5"
                           >
                             Buy Now
                           </button>
@@ -459,7 +493,7 @@ const Product = () => {
                   <button
                     onClick={handleLoadMore}
                     disabled={loading}
-                    className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2 cursor-pointer"
+                    className="px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition flex items-center gap-2 cursor-pointer"
                   >
                     {loading && (
                       <Loader2 className="w-5 h-5 animate-spin text-white" />
@@ -477,4 +511,3 @@ const Product = () => {
 };
 
 export default Product;
-
