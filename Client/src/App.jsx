@@ -1,5 +1,6 @@
+// No HashRouter here — just Routes
 import React from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector } from "react-redux";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
@@ -9,7 +10,6 @@ import Page2 from "./components/page/Page2";
 import Page3 from "./components/page/Page3";
 import Page4 from "./components/page/Page4";
 import Products from "./pages/Product";
-import NoDataFound from "./pages/NoDataFound";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/CheckOut.jsx";
 import MyOrders from "./pages/MyOrder.jsx";
@@ -47,9 +47,9 @@ const App = () => {
       <Route path="/checkout" element={<Checkout />} />
       <Route path="/my-orders" element={<MyOrders />} />
       <Route path="/product/:id" element={<ProductDetail />} />
-        <Route path="/payment" element={<PaymentPage />} />
-        <Route path="/payment-success" element={<PaymentSuccess />} />
-        <Route path="/payment-failed" element={<PaymentFailed />} />
+      <Route path="/payment" element={<PaymentPage />} />
+      <Route path="/payment-success" element={<PaymentSuccess />} />
+      <Route path="/payment-failed" element={<PaymentFailed />} />
       <Route path="*" element={<Navigate to="/products" />} />
     </Routes>
   );
